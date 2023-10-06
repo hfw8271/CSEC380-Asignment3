@@ -1,0 +1,41 @@
+version: '3'
+services:
+  dvwa:
+    image: vulnerables/web-dvwa
+    container_name: dvwa-container
+    hostname: dvwa.local
+    network_mode: bridge
+    environment:
+      - "VIRTUAL_HOST=dvwa.local"
+
+  nginx:
+    image: nginx
+    container_name: nginx-container
+    hostname: nginx.local
+    network_mode: bridge
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/nginx.crt:/etc/nginx/nginx.crt
+      - ./nginx/nginx.key:/etc/nginx/nginx.key
+    depends_on:
+      - dvwa
+    environment:
+      - "VIRTUAL_HOST=dvwa.local"
+    command: [nginx, '-g', 'daemon off;']
+
+  modsecurity:
+    image: owasp/modsecurity-crs:nginx
+    container_name: modsecurity-container
+    hostname: modsecurity.local
+    network_mode: bridge
+    ports:
+      - "80:80"
+    #volumes:
+    #  -
+    depends_on:
+      - dvwa
+    environment:
+      - "VIRTUAL_HOST=dvwa.local"
+
